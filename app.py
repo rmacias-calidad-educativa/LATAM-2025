@@ -4,7 +4,7 @@ import numpy as np
 import altair as alt
 
 # ---------------------------------------------------
-# Configuración de página y estilos
+# Configuración de página y estilos (fondo negro, texto blanco)
 # ---------------------------------------------------
 st.set_page_config(
     page_title="Resultados LATAM 2024-2025",
@@ -15,34 +15,23 @@ st.markdown(
     """
     <style>
     .stApp {
-        background-color: white;
-        color: #222222;  /* color de texto principal más oscuro */
+        background-color: #000000;
+        color: #FFFFFF;
     }
-
-    /* Títulos y subtítulos más oscuros */
-    h1, h2, h3, h4, h5, h6 {
-        color: #222222 !important;
+    h1, h2, h3, h4, h5, h6, label {
+        color: #FFFFFF !important;
     }
-
-    /* Texto normal */
     p, span, div, li {
-        color: #222222;
-    }
-
-    /* Etiquetas de widgets (radio, select, etc.) */
-    label {
-        color: #222222 !important;
+        color: #FFFFFF;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-
-# Logo Innova (base64 que enviaste)
+# Logo Innova (base64)
 LOGO_BASE64 = "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"
 
-# Encabezado con logo + título
 st.markdown(
     f"""
     <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
@@ -53,7 +42,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# Paleta base Innova
+# Colores Innova
 INNOVA_BLUE = "#00539B"
 INNOVA_GREEN = "#7AB800"
 INNOVA_ORANGE = "#FF9300"
@@ -72,11 +61,10 @@ def load_data():
 
     df_local = pd.concat([cog, hse], ignore_index=True)
 
-    # Tipos
     df_local["MEDIDA_500"] = pd.to_numeric(df_local["MEDIDA_500"], errors="coerce")
     df_local["SEXO"] = df_local["SEXO"].replace(".", np.nan)
 
-    # Mapear grados a etiquetas ordenadas
+    # Grados -> etiquetas ordenadas
     grado_map = {
         "3": "Tercero", 3: "Tercero",
         "4": "Cuarto", 4: "Cuarto",
@@ -102,84 +90,81 @@ def load_data():
 
     return df_local, grado_categories
 
-
 df, GRADO_CATEGORIES = load_data()
 
 # ---------------------------------------------------
-# Gráfico: MEDIDA_500 por sexo
+# MEDIDA_500 por sexo y grado (F = Femenino, M = Masculino)
 # ---------------------------------------------------
-def plot_medida_por_sexo(df_f):
-    st.subheader("MEDIDA_500 por sexo")
+def plot_medida_por_sexo(df_f, grado_categories):
+    st.subheader("MEDIDA_500 por sexo y grado")
 
     df_sexo = df_f[df_f["SEXO"].isin(["F", "M"])].copy()
-
     if df_sexo.empty:
         st.info("No hay datos con sexo definido (F/M) para los filtros actuales.")
         return
 
-    resumen_sexo = (
-        df_sexo.groupby("SEXO")["MEDIDA_500"]
+    resumen = (
+        df_sexo.groupby(["GRADO_LABEL", "SEXO"])["MEDIDA_500"]
         .mean()
         .reset_index(name="MEDIDA_500_MEDIA")
     )
-    resumen_sexo["Sexo"] = resumen_sexo["SEXO"].map({"F": "Femenino", "M": "Masculino"})
+    resumen["Sexo"] = resumen["SEXO"].map({"F": "Femenino", "M": "Masculino"})
 
     col_tab, col_chart = st.columns([1, 2])
 
     with col_tab:
-        st.write("**Media de MEDIDA_500 por sexo (F = Femenino, M = Masculino)**")
-        st.dataframe(resumen_sexo[["Sexo", "MEDIDA_500_MEDIA"]])
+        st.write("**Media de MEDIDA_500 por grado y sexo (F = Femenino, M = Masculino)**")
+        st.dataframe(resumen[["GRADO_LABEL", "Sexo", "MEDIDA_500_MEDIA"]])
 
-    with col_chart:
-        bar = (
-            alt.Chart(resumen_sexo)
-            .mark_bar()
-            .encode(
-                x=alt.X("Sexo:N", title="Sexo"),
-                y=alt.Y("MEDIDA_500_MEDIA:Q", title="Media MEDIDA_500"),
-                color=alt.Color(
-                    "Sexo:N",
-                    scale=alt.Scale(
-                        domain=["Femenino", "Masculino"],
-                        range=[INNOVA_ORANGE, INNOVA_BLUE],
-                    ),
-                    legend=None,
+    # Dos gráficos separados: uno para Femenino y otro para Masculino
+    chart = (
+        alt.Chart(resumen)
+        .mark_bar()
+        .encode(
+            x=alt.X("GRADO_LABEL:N", sort=grado_categories, title="Grado"),
+            y=alt.Y("MEDIDA_500_MEDIA:Q", title="Media MEDIDA_500"),
+            color=alt.Color(
+                "Sexo:N",
+                scale=alt.Scale(
+                    domain=["Femenino", "Masculino"],
+                    range=[INNOVA_ORANGE, INNOVA_BLUE],
                 ),
-                tooltip=[
-                    "Sexo:N",
-                    alt.Tooltip("MEDIDA_500_MEDIA:Q", format=".1f"),
-                ],
-            )
+                title="Sexo",
+            ),
+            column=alt.Column("Sexo:N", title="Sexo"),
+            tooltip=[
+                "GRADO_LABEL:N",
+                "Sexo:N",
+                alt.Tooltip("MEDIDA_500_MEDIA:Q", format=".1f"),
+            ],
         )
+    )
 
-        text = (
-            alt.Chart(resumen_sexo)
-            .mark_text(dy=-10, color="black")
-            .encode(
-                x="Sexo:N",
-                y="MEDIDA_500_MEDIA:Q",
-                text=alt.Text("MEDIDA_500_MEDIA:Q", format=".1f"),
-            )
+    text = (
+        alt.Chart(resumen)
+        .mark_text(dy=-10, color="white")
+        .encode(
+            x=alt.X("GRADO_LABEL:N", sort=grado_categories),
+            y="MEDIDA_500_MEDIA:Q",
+            column="Sexo:N",
+            text=alt.Text("MEDIDA_500_MEDIA:Q", format=".1f"),
         )
+    )
 
-        st.altair_chart(bar + text, use_container_width=True)
+    st.altair_chart(chart + text, use_container_width=True)
 
 # ---------------------------------------------------
-# Cognitivas: Niveles (dona + por grado)
+# Cognitivas: niveles (dona + proporciones por grado)
 # ---------------------------------------------------
 def plot_niveles_cognitivos(df_f, grado_categories):
     st.subheader("NIVEL_LOGRO_4 – Prueba Cognitiva")
 
     niveles_order = ["Inicial", "Básico", "Satisfactorio", "Avanzado"]
-
     counts = df_f["NIVEL_LOGRO_4"].value_counts().reindex(niveles_order, fill_value=0)
     total = counts.sum()
 
     niveles = pd.DataFrame({"NIVEL_LOGRO_4": niveles_order, "conteo": counts.values})
-    if total > 0:
-        niveles["proporcion"] = niveles["conteo"] / total
-    else:
-        niveles["proporcion"] = 0.0
+    niveles["proporcion"] = niveles["conteo"] / total if total > 0 else 0.0
 
     col_t1, col_t2 = st.columns([1, 2])
 
@@ -187,7 +172,6 @@ def plot_niveles_cognitivos(df_f, grado_categories):
         st.write("**Proporción de estudiantes por nivel de logro**")
         st.dataframe(niveles)
 
-    # Paleta incremental (azules)
     palette_cog = ["#E3F2FD", "#90CAF9", "#42A5F5", "#0D47A1"]
 
     with col_t2:
@@ -237,11 +221,7 @@ def plot_niveles_cognitivos(df_f, grado_categories):
         alt.Chart(tabla_ng)
         .mark_bar()
         .encode(
-            x=alt.X(
-                "GRADO_LABEL:N",
-                sort=grado_categories,
-                title="Grado",
-            ),
+            x=alt.X("GRADO_LABEL:N", sort=grado_categories, title="Grado"),
             y=alt.Y(
                 "proporcion:Q",
                 title="Proporción de estudiantes",
@@ -264,9 +244,9 @@ def plot_niveles_cognitivos(df_f, grado_categories):
 
     text_ng = (
         alt.Chart(tabla_ng)
-        .mark_text(dy=-10, color="black")
+        .mark_text(dy=-10, color="white")
         .encode(
-            x="GRADO_LABEL:N",
+            x=alt.X("GRADO_LABEL:N", sort=grado_categories),
             y="proporcion:Q",
             detail="NIVEL_LOGRO_4:N",
             text=alt.Text("proporcion:Q", format=".0%"),
@@ -276,42 +256,25 @@ def plot_niveles_cognitivos(df_f, grado_categories):
     st.altair_chart(chart_ng + text_ng, use_container_width=True)
 
 # ---------------------------------------------------
-# HSE: Niveles por prueba (proporciones)
+# HSE: niveles por prueba (proporciones)
 # ---------------------------------------------------
 def plot_niveles_hse(df_f, area_sel):
     st.subheader("NIVEL_LOGRO_4 – Prueba HSE")
 
-    # Orden y colores por prueba
     if area_sel == "Conciencia Social":
-        niveles_order = [
-            "Egocéntricos",
-            "Normativos",
-            "Empáticos",
-            "Empáticos Compasivos",
-        ]
+        niveles_order = ["Egocéntricos", "Normativos", "Empáticos", "Empáticos Compasivos"]
         palette = ["#FFF3E0", "#FFE0B2", "#FFB74D", "#FB8C00"]
     elif area_sel == "Relaciones Interpersonales":
-        niveles_order = [
-            "Disruptivo",
-            "Condicionado",
-            "Funcional",
-            "Constructivo",
-            "Transformador",
-        ]
+        niveles_order = ["Disruptivo", "Condicionado", "Funcional", "Constructivo", "Transformador"]
         palette = ["#E3F2FD", "#BBDEFB", "#90CAF9", "#42A5F5", "#0D47A1"]
     else:
-        # Fallback si el nombre de la prueba es distinto
         niveles_order = sorted(df_f["NIVEL_LOGRO_4"].dropna().unique().tolist())
-        palette = ["#E0F2F1", "#80CBC4", "#26A69A", "#00897B", "#004D40"][: len(niveles_order)]
+        palette = ["#E0F2F1", "#80CBC4", "#26A69A", "#00897B", "#004D40"][:len(niveles_order)]
 
     counts = df_f["NIVEL_LOGRO_4"].value_counts().reindex(niveles_order, fill_value=0)
     total = counts.sum()
     niveles = pd.DataFrame({"NIVEL_LOGRO_4": niveles_order, "conteo": counts.values})
-
-    if total > 0:
-        niveles["proporcion"] = niveles["conteo"] / total
-    else:
-        niveles["proporcion"] = 0.0
+    niveles["proporcion"] = niveles["conteo"] / total if total > 0 else 0.0
 
     st.write("**Proporción de estudiantes por nivel (HSE)**")
     st.dataframe(niveles)
@@ -342,7 +305,7 @@ def plot_niveles_hse(df_f, area_sel):
 
     text = (
         alt.Chart(niveles)
-        .mark_text(dy=-10, color="black")
+        .mark_text(dy=-10, color="white")
         .encode(
             x="NIVEL_LOGRO_4:N",
             y="proporcion:Q",
@@ -353,7 +316,7 @@ def plot_niveles_hse(df_f, area_sel):
     st.altair_chart(chart + text, use_container_width=True)
 
 # ---------------------------------------------------
-# Lógica de cada pestaña (Cognitiva / HSE)
+# Lógica de cada pestaña
 # ---------------------------------------------------
 def show_tab_for_fuente(df_global, fuente, grado_categories, key_prefix):
     df_src = df_global[df_global["FUENTE"] == fuente].copy()
@@ -363,11 +326,7 @@ def show_tab_for_fuente(df_global, fuente, grado_categories, key_prefix):
         st.warning(f"No hay datos para la fuente: {fuente}")
         return
 
-    if is_hse:
-        st.markdown("### Prueba HSE (Habilidades socioemocionales)")
-    else:
-        st.markdown("### Prueba Cognitiva")
-
+    st.markdown("### Prueba HSE (Habilidades socioemocionales)" if is_hse else "### Prueba Cognitiva")
     st.markdown("#### Filtros")
 
     col1, col2, col3 = st.columns(3)
@@ -401,7 +360,7 @@ def show_tab_for_fuente(df_global, fuente, grado_categories, key_prefix):
         areas = sorted(df_src["COD_AREA"].dropna().unique().tolist())
         if is_hse:
             label_area = "Prueba"
-            opciones_area = areas              # sin "Todas"
+            opciones_area = areas      # sin "Todas"
             index_area = 0
         else:
             label_area = "Área"
@@ -415,7 +374,7 @@ def show_tab_for_fuente(df_global, fuente, grado_categories, key_prefix):
             horizontal=True,
         )
 
-    # ---- Grados condicionados a prueba/año/sede ----
+    # Grados condicionados por filtros
     df_for_grado = df_src.copy()
     if ano_sel != "Todos":
         df_for_grado = df_for_grado[df_for_grado["ANHO"] == ano_sel]
@@ -428,8 +387,7 @@ def show_tab_for_fuente(df_global, fuente, grado_categories, key_prefix):
             df_for_grado = df_for_grado[df_for_grado["COD_AREA"] == area_sel]
 
     grados_presentes = [
-        g
-        for g in grado_categories
+        g for g in grado_categories
         if g in df_for_grado["GRADO_LABEL"].astype(str).unique()
     ]
     grado_opts = ["Todos"] + grados_presentes if grados_presentes else ["Todos"]
@@ -441,7 +399,7 @@ def show_tab_for_fuente(df_global, fuente, grado_categories, key_prefix):
         horizontal=True,
     )
 
-    # ---- Aplicar filtros definitivos ----
+    # Filtros finales
     df_f = df_src.copy()
     if ano_sel != "Todos":
         df_f = df_f[df_f["ANHO"] == ano_sel]
@@ -463,34 +421,25 @@ def show_tab_for_fuente(df_global, fuente, grado_categories, key_prefix):
 
     # KPIs
     colk1, colk2, colk3, colk4 = st.columns(4)
-
     with colk1:
         n_est = df_f["CORREO"].nunique() if "CORREO" in df_f.columns else len(df_f)
         st.metric("Estudiantes únicos", n_est)
-
     with colk2:
-        n_sedes = df_f["SEDE"].nunique()
-        st.metric("Sedes", n_sedes)
-
+        st.metric("Sedes", df_f["SEDE"].nunique())
     with colk3:
-        media_medida = df_f["MEDIDA_500"].mean()
-        st.metric("Media MEDIDA_500", f"{media_medida:,.1f}")
-
+        st.metric("Media MEDIDA_500", f"{df_f['MEDIDA_500'].mean():,.1f}")
     with colk4:
         desv_medida = df_f["MEDIDA_500"].std()
-        st.metric(
-            "Desviación MEDIDA_500",
-            f"{desv_medida:,.1f}" if not np.isnan(desv_medida) else "N/A",
-        )
+        st.metric("Desviación MEDIDA_500", f"{desv_medida:,.1f}" if not np.isnan(desv_medida) else "N/A")
 
     st.markdown("---")
 
-    # Contraste por sexo
-    plot_medida_por_sexo(df_f)
+    # Comparación por sexo (incluyendo grados)
+    plot_medida_por_sexo(df_f, grado_categories)
 
     st.markdown("---")
 
-    # Niveles según tipo de prueba
+    # Niveles
     if is_hse:
         plot_niveles_hse(df_f, area_sel)
     else:
@@ -514,13 +463,10 @@ def show_tab_for_fuente(df_global, fuente, grado_categories, key_prefix):
         )
 
 # ---------------------------------------------------
-# Tabs: Cognitiva / HSE
+# Tabs principales
 # ---------------------------------------------------
 tab_cog, tab_hse = st.tabs(
-    [
-        "Prueba Cognitiva",
-        "Prueba HSE (Habilidades socioemocionales)",
-    ]
+    ["Prueba Cognitiva", "Prueba HSE (Habilidades socioemocionales)"]
 )
 
 with tab_cog:
@@ -528,4 +474,3 @@ with tab_cog:
 
 with tab_hse:
     show_tab_for_fuente(df, "HSE", GRADO_CATEGORIES, key_prefix="hse")
-
