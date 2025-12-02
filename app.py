@@ -113,24 +113,19 @@ def plot_medida_por_sexo(df_f, grado_categories):
 
     st.write("**Media de MEDIDA_500 por grado y sexo (F = Femenino, M = Masculino)**")
 
-    # Más espacio para la gráfica: 1 parte tabla, 3 partes gráfico
+    # 1 parte tabla, 3 partes gráfica
     col_tab, col_chart = st.columns([1, 3])
 
     with col_tab:
         st.dataframe(resumen[["GRADO_LABEL", "Sexo", "MEDIDA_500_MEDIA"]])
 
-    # Base del gráfico: un poco más alto y ancho
-    base = (
-        alt.Chart(resumen)
-        .properties(
-            width=500,   # ancho base dentro de la columna
-            height=380   # alto de la gráfica
-        )
-    )
+    # Base del gráfico: barras agrupadas por sexo dentro de cada grado
+    base = alt.Chart(resumen).properties(height=380)
 
-    # Barras
     bar = base.mark_bar().encode(
         x=alt.X("GRADO_LABEL:N", sort=grado_categories, title="Grado"),
+        # barras agrupadas: una por sexo dentro de cada grado
+        xOffset=alt.XOffset("Sexo:N"),
         y=alt.Y("MEDIDA_500_MEDIA:Q", title="Media MEDIDA_500"),
         color=alt.Color(
             "Sexo:N",
@@ -147,20 +142,19 @@ def plot_medida_por_sexo(df_f, grado_categories):
         ],
     )
 
-    # Etiquetas de texto sobre cada barra
+    # Etiquetas con la media sobre cada barra
     text = base.mark_text(dy=-10, color="white").encode(
         x=alt.X("GRADO_LABEL:N", sort=grado_categories),
+        xOffset=alt.XOffset("Sexo:N"),
         y="MEDIDA_500_MEDIA:Q",
         text=alt.Text("MEDIDA_500_MEDIA:Q", format=".1f"),
     )
 
-    # Layer (barras + texto) y facet por sexo en columnas
-    layered = alt.layer(bar, text).facet(
-        column=alt.Column("Sexo:N", title="Sexo")
-    )
+    chart = alt.layer(bar, text)
 
     with col_chart:
-        st.altair_chart(layered, use_container_width=True)
+        st.altair_chart(chart, use_container_width=True)
+
 # ---------------------------------------------------
 # Cognitivas: niveles (dona + proporciones por grado)
 # ---------------------------------------------------
@@ -508,6 +502,7 @@ with tab_cog:
 
 with tab_hse:
     show_tab_for_fuente(df, "HSE", GRADO_CATEGORIES, key_prefix="hse")
+
 
 
 
