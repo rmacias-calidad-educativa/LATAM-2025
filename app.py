@@ -6,14 +6,18 @@ import numpy as np
 # Configuración de página
 # -------------------------
 st.set_page_config(
-    page_title="Dashboard Cognitivas & HSE",
+    page_title="Dashboard MEDIDA_500 & NIVEL_LOGRO_4",
     layout="wide"
 )
 
-st.title("Dashboard Cognitivas & HSE")
+st.title("Dashboard MEDIDA_500 & NIVEL_LOGRO_4")
 st.markdown(
-    "Este visualizador integra resultados de **pruebas cognitivas** y **HSE** "
-    "por **año, sede, grado y área**, con foco en **MEDIDA_500** y **NIVEL_LOGRO_4**."
+    """
+    Visualizador integrado de resultados **Cognitivos** y **HSE**  
+    Filtra por **año, sede, grado y área** y analiza:
+    - **MEDIDA_500** segmentado por **sexo**  
+    - Distribución de **NIVEL_LOGRO_4**
+    """
 )
 
 # -------------------------
@@ -21,21 +25,19 @@ st.markdown(
 # -------------------------
 @st.cache_data
 def load_data():
-    # Ajusta los nombres si cambiaron en tu repo
+    # Ajusta rutas/nombres si cambian
     cog = pd.read_excel("data/Colombia_Latam-Cognitivas (2).xlsx")
     hse = pd.read_excel("data/Colombia_Latam_HSE (1).xlsx")
 
-    # Origen de la prueba
     cog["FUENTE"] = "Cognitivas"
     hse["FUENTE"] = "HSE"
 
-    # Unificar columnas (ambas tienen misma estructura base)
     df = pd.concat([cog, hse], ignore_index=True)
 
-    # Asegurarnos de que MEDIDA_500 sea numérica
+    # Asegurar tipo numérico
     df["MEDIDA_500"] = pd.to_numeric(df["MEDIDA_500"], errors="coerce")
 
-    # Limpiar el sexo (quedarnos con F/M y tratar '.' como NaN)
+    # Tratar '.' en SEXO como missing
     df["SEXO"] = df["SEXO"].replace(".", np.nan)
 
     return df
@@ -43,39 +45,34 @@ def load_data():
 df = load_data()
 
 # -------------------------
-# Barra lateral: filtros
+# Filtros en barra lateral
 # -------------------------
 st.sidebar.header("Filtros")
 
-# Fuente (Cognitivas / HSE)
 fuentes = st.sidebar.multiselect(
-    "Tipo de prueba (fuente)",
+    "Tipo de prueba",
     options=sorted(df["FUENTE"].dropna().unique()),
     default=sorted(df["FUENTE"].dropna().unique())
 )
 
-# Año (ANHO)
 anhos = st.sidebar.multiselect(
     "Año / Periodo (ANHO)",
     options=sorted(df["ANHO"].dropna().unique()),
     default=sorted(df["ANHO"].dropna().unique())
 )
 
-# Sede
 sedes = st.sidebar.multiselect(
     "Sede",
     options=sorted(df["SEDE"].dropna().unique()),
     default=sorted(df["SEDE"].dropna().unique())
 )
 
-# Grado
 grados = st.sidebar.multiselect(
     "Grado",
     options=sorted(df["GRADO"].dropna().unique()),
     default=sorted(df["GRADO"].dropna().unique())
 )
 
-# Área
 areas = st.sidebar.multiselect(
     "Área (COD_AREA)",
     options=sorted(df["COD_AREA"].dropna().unique()),
@@ -95,31 +92,33 @@ mask = (
 
 df_f = df[mask].copy()
 
-st.markdown(f"### Resultados filtrados ({len(df_f)} registros)")
+st.markdown(f"### Datos filtrados ({len(df_f)} registros)")
 
 if df_f.empty:
     st.warning("No hay datos para la combinación de filtros seleccionada.")
     st.stop()
 
 # -------------------------
-# Indicadores generales
+# KPIs básicos
 # -------------------------
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    n_students = df_f["CORREO"].nunique() if "CORREO" in df_f.columns else len(df_f)
-    st.metric("Estudiantes (únicos)", n_students)
+    n_est = df_f["CORREO"].nunique() if "CORREO" in df_f.columns else len(df_f)
+    st.metric("Estudiantes únicos", n_est)
 
 with col2:
+    n_sedes = df_f["SEDE"].nunique()
+    st.metric("Sedes", n_sedes)
+
+with col3:
     media_medida = df_f["MEDIDA_500"].mean()
     st.metric("Media MEDIDA_500", f"{media_medida:,.1f}")
 
-with col3:
+with col4:
     desv_medida = df_f["MEDIDA_500"].std()
-    if not np.isnan(desv_medida):
-        st.metric("Desviación MEDIDA_500", f"{desv_medida:,.1f}")
-    else:
-        st.metric("Desviación MEDIDA_500", "N/A")
+    st.metric("Desviación MEDIDA_500",
+              f"{desv_medida:,.1f}" if not np.isnan(desv_medida) else "N/A")
 
 st.markdown("---")
 
@@ -133,25 +132,29 @@ df_sexo = df_f[df_f["SEXO"].isin(["F", "M"])].copy()
 if df_sexo.empty:
     st.info("No hay datos con sexo definido (F/M) para los filtros actuales.")
 else:
-    # Agregar media y conteo por sexo
     medida_sexo = (
-        df_sexo.groupby("SEXO")["MEDIDA_500"]
+        df_sexo
+        .groupby("SEXO")["MEDIDA_500"]
         .agg(media="mean", n="count")
         .sort_index()
     )
 
-    st.write("**Media de MEDIDA_500 por sexo**")
-    st.dataframe(medida_sexo)
+    col_a, col_b = st.columns([1, 2])
 
-    # Gráfica sencilla de barras
-    st.bar_chart(medida_sexo["media"])
+    with col_a:
+        st.write("**Media de MEDIDA_500 por sexo**")
+        st.dataframe(medida_sexo)
+
+    with col_b:
+        st.write("**Gráfica de MEDIDA_500 por sexo**")
+        st.bar_chart(medida_sexo["media"])
 
 st.markdown("---")
 
 # -------------------------
-# Distribución de NIVEL_LOGRO_4
+# Distribución de NIVEL_LOGRO_4 (global)
 # -------------------------
-st.subheader("Distribución de NIVEL_LOGRO_4")
+st.subheader("Distribución de NIVEL_LOGRO_4 (global)")
 
 niveles = (
     df_f["NIVEL_LOGRO_4"]
@@ -162,16 +165,50 @@ niveles = (
 
 niveles["porcentaje"] = (niveles["conteo"] / niveles["conteo"].sum()) * 100
 
-st.write("**Tabla de niveles de logro (4 niveles / categorías HSE)**")
-st.dataframe(niveles)
+col_t1, col_t2 = st.columns([1, 2])
 
-st.write("**Gráfica de conteos por NIVEL_LOGRO_4**")
-st.bar_chart(niveles["conteo"])
+with col_t1:
+    st.write("**Tabla de niveles de logro**")
+    st.dataframe(niveles)
+
+with col_t2:
+    st.write("**Conteos por NIVEL_LOGRO_4**")
+    st.bar_chart(niveles["conteo"])
+
+st.markdown("---")
 
 # -------------------------
-# Tabla detallada opcional
+# NIVEL_LOGRO_4 por grado (para más detalle)
 # -------------------------
-with st.expander("Ver datos detallados (tabla)"):
+st.subheader("NIVEL_LOGRO_4 por grado")
+
+tabla_ng = (
+    df_f
+    .groupby(["GRADO", "NIVEL_LOGRO_4"])
+    .size()
+    .reset_index(name="conteo")
+)
+
+if tabla_ng.empty:
+    st.info("No hay datos para mostrar NIVEL_LOGRO_4 por grado.")
+else:
+    # Pivotear a formato ancho para gráfica
+    pivot_ng = tabla_ng.pivot(
+        index="GRADO",
+        columns="NIVEL_LOGRO_4",
+        values="conteo"
+    ).fillna(0)
+
+    st.write("**Tabla (GRADO x NIVEL_LOGRO_4)**")
+    st.dataframe(pivot_ng)
+
+    st.write("**Gráfica (barras por grado)** – cada barra es el total de estudiantes por nivel de logro en ese grado")
+    st.bar_chart(pivot_ng)
+
+# -------------------------
+# Tabla de detalle
+# -------------------------
+with st.expander("Ver tabla de detalle"):
     st.dataframe(
         df_f[
             [
