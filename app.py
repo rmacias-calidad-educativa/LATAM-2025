@@ -161,10 +161,10 @@ def plot_medida_por_sexo(df_f, grado_categories):
 def plot_niveles_cognitivos(df_f, grado_categories):
     st.subheader("NIVEL_LOGRO_4 – Prueba Cognitiva")
 
-    # Orden de niveles
+    # Orden fijo de niveles
     niveles_order = ["Inicial", "Básico", "Satisfactorio", "Avanzado"]
 
-    # Conteos y proporciones globales
+    # ------------------ DONA GLOBAL ------------------
     counts = df_f["NIVEL_LOGRO_4"].value_counts().reindex(niveles_order, fill_value=0)
     total = counts.sum()
 
@@ -177,16 +177,14 @@ def plot_niveles_cognitivos(df_f, grado_categories):
 
     col_t1, col_t2 = st.columns([1, 2])
 
-    # ----- DONA GLOBAL -----
     with col_t1:
         st.write("**Proporción de estudiantes por nivel de logro**")
-        # Mostramos porcentaje en la tabla, no 0.algo
-        niveles_tabla = niveles.copy()
-        niveles_tabla["porcentaje"] = niveles_tabla["porcentaje"].round(1).astype(str) + "%"
-        st.dataframe(niveles_tabla[["NIVEL_LOGRO_4", "conteo", "porcentaje"]])
+        tabla = niveles.copy()
+        tabla["porcentaje"] = tabla["porcentaje"].round(1).astype(str) + "%"
+        st.dataframe(tabla[["NIVEL_LOGRO_4", "conteo", "porcentaje"]])
 
-    # paleta incremental para los 4 niveles
-    palette_cog = ["#E3F2FD", "#90CAF9", "#42A5F5", "#0D47A1"]
+    # paleta incremental de azules (Inicial → Avanzado)
+    palette_cog = ["#BBDEFB", "#64B5F6", "#1E88E5", "#0D47A1"]
 
     with col_t2:
         chart = (
@@ -209,35 +207,62 @@ def plot_niveles_cognitivos(df_f, grado_categories):
         )
         st.altair_chart(chart, use_container_width=True)
 
-    # ----- BARRAS POR GRADO (DESAGREGADAS) -----
+    # ------------------ BARRAS POR GRADO ------------------
     st.markdown("### NIVEL_LOGRO_4 por grado (proporción en cada grado)")
 
+    # Conteo por grado y nivel
     tabla_ng = (
         df_f.groupby(["GRADO_LABEL", "NIVEL_LOGRO_4"])
         .size()
         .reset_index(name="conteo")
     )
+
     if tabla_ng.empty:
         st.info("No hay datos para mostrar NIVEL_LOGRO_4 por grado.")
         return
 
+    # Asegurarnos de tener TODAS las combinaciones grado x nivel
+    grados_presentes = (
+        df_f["GRADO_LABEL"]
+        .dropna()
+        .astype(str)
+        .unique()
+        .tolist()
+    )
+    grados_presentes = [g for g in grado_categories if g in grados_presentes]
+
+    grid = pd.MultiIndex.from_product(
+        [grados_presentes, niveles_order],
+        names=["GRADO_LABEL", "NIVEL_LOGRO_4"]
+    ).to_frame(index=False)
+
+    tabla_ng = grid.merge(tabla_ng, on=["GRADO_LABEL", "NIVEL_LOGRO_4"], how="left")
+    tabla_ng["conteo"] = tabla_ng["conteo"].fillna(0)
+
+    # Totales por grado
     totales_grado = (
         df_f.groupby("GRADO_LABEL")
         .size()
         .reset_index(name="n_grado")
     )
     tabla_ng = tabla_ng.merge(totales_grado, on="GRADO_LABEL", how="left")
-    tabla_ng["proporcion"] = tabla_ng["conteo"] / tabla_ng["n_grado"]
+
+    # Proporción y porcentaje
+    tabla_ng["proporcion"] = np.where(
+        tabla_ng["n_grado"] > 0,
+        tabla_ng["conteo"] / tabla_ng["n_grado"],
+        0.0,
+    )
     tabla_ng["porcentaje"] = tabla_ng["proporcion"] * 100
 
     st.write("**Proporción por grado y nivel (en %)**")
-    tabla_ng_mostrar = tabla_ng.copy()
-    tabla_ng_mostrar["porcentaje"] = tabla_ng_mostrar["porcentaje"].round(1).astype(str) + "%"
+    tabla_mostrar = tabla_ng.copy()
+    tabla_mostrar["porcentaje"] = tabla_mostrar["porcentaje"].round(1).astype(str) + "%"
     st.dataframe(
-        tabla_ng_mostrar[["GRADO_LABEL", "NIVEL_LOGRO_4", "conteo", "porcentaje"]]
+        tabla_mostrar[["GRADO_LABEL", "NIVEL_LOGRO_4", "conteo", "porcentaje"]]
     )
 
-    # Gráfico de barras desagregadas (no apiladas)
+    # Base del gráfico (barras DESAGREGADAS, no apiladas)
     base = alt.Chart(tabla_ng).properties(height=320)
 
     chart_ng = (
@@ -248,12 +273,16 @@ def plot_niveles_cognitivos(df_f, grado_categories):
                 sort=grado_categories,
                 title="Grado",
             ),
-            # barras desagregadas por nivel dentro de cada grado
-            xOffset=alt.XOffset("NIVEL_LOGRO_4:N"),
+            # barras desagregadas por nivel dentro de cada grado (en ORDEN fijo)
+            xOffset=alt.XOffset(
+                "NIVEL_LOGRO_4:N",
+                scale=alt.Scale(domain=niveles_order),
+            ),
             y=alt.Y(
                 "proporcion:Q",
                 title="Proporción de estudiantes",
-                axis=alt.Axis(format="%"),
+                axis=alt.Axis(format="%", tickCount=6),
+                scale=alt.Scale(domain=[0, 1])  # SIEMPRE 0% a 100%
             ),
             color=alt.Color(
                 "NIVEL_LOGRO_4:N",
@@ -269,12 +298,18 @@ def plot_niveles_cognitivos(df_f, grado_categories):
         )
     )
 
-    # Etiquetas con porcentaje sobre cada barra
+    # Etiquetas con % sobre cada barra
     text_ng = (
         base.mark_text(dy=-5, color="white")
         .encode(
-            x=alt.X("GRADO_LABEL:N", sort=grado_categories),
-            xOffset=alt.XOffset("NIVEL_LOGRO_4:N"),
+            x=alt.X(
+                "GRADO_LABEL:N",
+                sort=grado_categories,
+            ),
+            xOffset=alt.XOffset(
+                "NIVEL_LOGRO_4:N",
+                scale=alt.Scale(domain=niveles_order),
+            ),
             y="proporcion:Q",
             text=alt.Text("proporcion:Q", format=".0%"),
             detail="NIVEL_LOGRO_4:N",
@@ -502,6 +537,7 @@ with tab_cog:
 
 with tab_hse:
     show_tab_for_fuente(df, "HSE", GRADO_CATEGORIES, key_prefix="hse")
+
 
 
 
