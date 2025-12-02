@@ -103,6 +103,7 @@ def plot_medida_por_sexo(df_f, grado_categories):
         st.info("No hay datos con sexo definido (F/M) para los filtros actuales.")
         return
 
+    # Media por grado y sexo
     resumen = (
         df_sexo.groupby(["GRADO_LABEL", "SEXO"])["MEDIDA_500"]
         .mean()
@@ -116,42 +117,42 @@ def plot_medida_por_sexo(df_f, grado_categories):
         st.write("**Media de MEDIDA_500 por grado y sexo (F = Femenino, M = Masculino)**")
         st.dataframe(resumen[["GRADO_LABEL", "Sexo", "MEDIDA_500_MEDIA"]])
 
-    # Dos gráficos separados: uno para Femenino y otro para Masculino
-    chart = (
-        alt.Chart(resumen)
-        .mark_bar()
-        .encode(
-            x=alt.X("GRADO_LABEL:N", sort=grado_categories, title="Grado"),
-            y=alt.Y("MEDIDA_500_MEDIA:Q", title="Media MEDIDA_500"),
-            color=alt.Color(
-                "Sexo:N",
-                scale=alt.Scale(
-                    domain=["Femenino", "Masculino"],
-                    range=[INNOVA_ORANGE, INNOVA_BLUE],
-                ),
-                title="Sexo",
+    # Base común para el gráfico
+    base = alt.Chart(resumen)
+
+    # Barras
+    bar = base.mark_bar().encode(
+        x=alt.X("GRADO_LABEL:N", sort=grado_categories, title="Grado"),
+        y=alt.Y("MEDIDA_500_MEDIA:Q", title="Media MEDIDA_500"),
+        color=alt.Color(
+            "Sexo:N",
+            scale=alt.Scale(
+                domain=["Femenino", "Masculino"],
+                range=[INNOVA_ORANGE, INNOVA_BLUE],
             ),
-            column=alt.Column("Sexo:N", title="Sexo"),
-            tooltip=[
-                "GRADO_LABEL:N",
-                "Sexo:N",
-                alt.Tooltip("MEDIDA_500_MEDIA:Q", format=".1f"),
-            ],
-        )
+            title="Sexo",
+        ),
+        tooltip=[
+            "GRADO_LABEL:N",
+            "Sexo:N",
+            alt.Tooltip("MEDIDA_500_MEDIA:Q", format=".1f"),
+        ],
     )
 
-    text = (
-        alt.Chart(resumen)
-        .mark_text(dy=-10, color="white")
-        .encode(
-            x=alt.X("GRADO_LABEL:N", sort=grado_categories),
-            y="MEDIDA_500_MEDIA:Q",
-            column="Sexo:N",
-            text=alt.Text("MEDIDA_500_MEDIA:Q", format=".1f"),
-        )
+    # Etiquetas de texto sobre las barras
+    text = base.mark_text(dy=-10, color="white").encode(
+        x=alt.X("GRADO_LABEL:N", sort=grado_categories),
+        y="MEDIDA_500_MEDIA:Q",
+        text=alt.Text("MEDIDA_500_MEDIA:Q", format=".1f"),
     )
 
-    st.altair_chart(chart + text, use_container_width=True)
+    # Layer (barras + texto) y luego facet por sexo (columnas separadas)
+    layered = alt.layer(bar, text).facet(
+        column=alt.Column("Sexo:N", title="Sexo")
+    )
+
+    with col_chart:
+        st.altair_chart(layered, use_container_width=True)
 
 # ---------------------------------------------------
 # Cognitivas: niveles (dona + proporciones por grado)
@@ -474,3 +475,4 @@ with tab_cog:
 
 with tab_hse:
     show_tab_for_fuente(df, "HSE", GRADO_CATEGORIES, key_prefix="hse")
+
