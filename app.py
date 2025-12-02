@@ -11,17 +11,33 @@ st.set_page_config(
     layout="wide"
 )
 
-# Fondo blanco
 st.markdown(
     """
     <style>
     .stApp {
         background-color: white;
+        color: #222222;  /* color de texto principal más oscuro */
+    }
+
+    /* Títulos y subtítulos más oscuros */
+    h1, h2, h3, h4, h5, h6 {
+        color: #222222 !important;
+    }
+
+    /* Texto normal */
+    p, span, div, li {
+        color: #222222;
+    }
+
+    /* Etiquetas de widgets (radio, select, etc.) */
+    label {
+        color: #222222 !important;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
+
 
 # Logo Innova (base64 que enviaste)
 LOGO_BASE64 = "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"
@@ -512,3 +528,4 @@ with tab_cog:
 
 with tab_hse:
     show_tab_for_fuente(df, "HSE", GRADO_CATEGORIES, key_prefix="hse")
+
