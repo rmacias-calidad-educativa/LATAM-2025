@@ -324,33 +324,61 @@ def plot_niveles_cognitivos(df_f, grado_categories):
 def plot_niveles_hse(df_f, area_sel):
     st.subheader("NIVEL_LOGRO_4 – Prueba HSE")
 
+    # Orden y colores por prueba, tal como definiste
     if area_sel == "Conciencia Social":
-        niveles_order = ["Egocéntricos", "Normativos", "Empáticos", "Empáticos Compasivos"]
+        niveles_order = [
+            "Egocéntricos",
+            "Normativos",
+            "Empáticos",
+            "Empáticos Compasivos",
+        ]
         palette = ["#FFF3E0", "#FFE0B2", "#FFB74D", "#FB8C00"]
     elif area_sel == "Relaciones Interpersonales":
-        niveles_order = ["Disruptivo", "Condicionado", "Funcional", "Constructivo", "Transformador"]
+        niveles_order = [
+            "Disruptivo",
+            "Condicionado",
+            "Funcional",
+            "Constructivo",
+            "Transformador",
+        ]
         palette = ["#E3F2FD", "#BBDEFB", "#90CAF9", "#42A5F5", "#0D47A1"]
     else:
+        # fallback si llegara otra prueba
         niveles_order = sorted(df_f["NIVEL_LOGRO_4"].dropna().unique().tolist())
-        palette = ["#E0F2F1", "#80CBC4", "#26A69A", "#00897B", "#004D40"][:len(niveles_order)]
+        palette = ["#E0F2F1", "#80CBC4", "#26A69A", "#00897B", "#004D40"][: len(niveles_order)]
 
+    # Conteo por nivel, respetando el orden
     counts = df_f["NIVEL_LOGRO_4"].value_counts().reindex(niveles_order, fill_value=0)
     total = counts.sum()
+
     niveles = pd.DataFrame({"NIVEL_LOGRO_4": niveles_order, "conteo": counts.values})
-    niveles["proporcion"] = niveles["conteo"] / total if total > 0 else 0.0
+    if total > 0:
+        niveles["proporcion"] = niveles["conteo"] / total
+    else:
+        niveles["proporcion"] = 0.0
+    niveles["porcentaje"] = niveles["proporcion"] * 100
 
     st.write("**Proporción de estudiantes por nivel (HSE)**")
-    st.dataframe(niveles)
+    tabla = niveles.copy()
+    tabla["porcentaje"] = tabla["porcentaje"].round(1).astype(str) + "%"
+    st.dataframe(tabla[["NIVEL_LOGRO_4", "conteo", "porcentaje"]])
 
+    base = alt.Chart(niveles).properties(height=320)
+
+    # Barras en orden fijo, Y de 0 a 100%
     chart = (
-        alt.Chart(niveles)
-        .mark_bar()
+        base.mark_bar()
         .encode(
-            x=alt.X("NIVEL_LOGRO_4:N", sort=niveles_order, title="Nivel"),
+            x=alt.X(
+                "NIVEL_LOGRO_4:N",
+                sort=niveles_order,
+                title="Nivel",
+            ),
             y=alt.Y(
                 "proporcion:Q",
                 title="Proporción de estudiantes",
-                axis=alt.Axis(format="%"),
+                axis=alt.Axis(format="%", tickCount=6),
+                scale=alt.Scale(domain=[0, 1]),  # 0% a 100%
             ),
             color=alt.Color(
                 "NIVEL_LOGRO_4:N",
@@ -363,20 +391,20 @@ def plot_niveles_hse(df_f, area_sel):
                 "conteo:Q",
             ],
         )
-        .properties(height=320)
     )
 
+    # Etiquetas en %
     text = (
-        alt.Chart(niveles)
-        .mark_text(dy=-10, color="white")
+        base.mark_text(dy=-10, color="white")
         .encode(
-            x="NIVEL_LOGRO_4:N",
+            x=alt.X("NIVEL_LOGRO_4:N", sort=niveles_order),
             y="proporcion:Q",
             text=alt.Text("proporcion:Q", format=".0%"),
         )
     )
 
     st.altair_chart(chart + text, use_container_width=True)
+
 
 # ---------------------------------------------------
 # Lógica de cada pestaña
@@ -537,6 +565,7 @@ with tab_cog:
 
 with tab_hse:
     show_tab_for_fuente(df, "HSE", GRADO_CATEGORIES, key_prefix="hse")
+
 
 
 
