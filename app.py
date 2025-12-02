@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import altair as alt
+import unicodedata
 
 # ---------------------------------------------------
 # Configuración de página y estilos (fondo negro, texto blanco)
@@ -324,16 +325,37 @@ def plot_niveles_cognitivos(df_f, grado_categories):
 def plot_niveles_hse(df_f, area_sel):
     st.subheader("NIVEL_LOGRO_4 – Prueba HSE")
 
-    # Orden y colores por prueba, tal como definiste
-    if area_sel == "Conciencia Social":
+    # --- Normalización básica para evitar problemas de tildes/mayúsculas/espacios ---
+    def norm(s):
+        if pd.isna(s):
+            return None
+        s = str(s).strip()
+        s = unicodedata.normalize("NFKD", s)
+        s = "".join(c for c in s if not unicodedata.combining(c))
+        return s.lower()
+
+    df_hse = df_f.copy()
+    df_hse["nivel_norm"] = df_hse["NIVEL_LOGRO_4"].apply(norm)
+    area_norm = norm(area_sel)
+
+    # Orden y mapa por prueba, tal como definiste
+    if area_norm == "conciencia social":
         niveles_order = [
             "Egocéntricos",
             "Normativos",
             "Empáticos",
             "Empáticos Compasivos",
         ]
+        # mapeo desde forma normalizada a etiqueta bonita
+        map_norm_to_label = {
+            "egocentricos": "Egocéntricos",
+            "normativos": "Normativos",
+            "empaticos": "Empáticos",
+            "empaticos compasivos": "Empáticos Compasivos",
+            "empaticos_compasivos": "Empáticos Compasivos",
+        }
         palette = ["#FFF3E0", "#FFE0B2", "#FFB74D", "#FB8C00"]
-    elif area_sel == "Relaciones Interpersonales":
+    elif area_norm == "relaciones interpersonales":
         niveles_order = [
             "Disruptivo",
             "Condicionado",
@@ -341,14 +363,26 @@ def plot_niveles_hse(df_f, area_sel):
             "Constructivo",
             "Transformador",
         ]
+        map_norm_to_label = {
+            "disruptivo": "Disruptivo",
+            "condicionado": "Condicionado",
+            "funcional": "Funcional",
+            "constructivo": "Constructivo",
+            "transformador": "Transformador",
+        }
         palette = ["#E3F2FD", "#BBDEFB", "#90CAF9", "#42A5F5", "#0D47A1"]
     else:
         # fallback si llegara otra prueba
-        niveles_order = sorted(df_f["NIVEL_LOGRO_4"].dropna().unique().tolist())
+        niveles_order = sorted(df_hse["NIVEL_LOGRO_4"].dropna().unique().tolist())
+        map_norm_to_label = {}
         palette = ["#E0F2F1", "#80CBC4", "#26A69A", "#00897B", "#004D40"][: len(niveles_order)]
 
-    # Conteo por nivel, respetando el orden
-    counts = df_f["NIVEL_LOGRO_4"].value_counts().reindex(niveles_order, fill_value=0)
+    # Canonizar las etiquetas usando el mapa; si no está en el mapa, se deja como viene
+    df_hse["NIVEL_CANON"] = df_hse["nivel_norm"].map(map_norm_to_label)
+    df_hse["NIVEL_CANON"] = df_hse["NIVEL_CANON"].fillna(df_hse["NIVEL_LOGRO_4"])
+
+    # Conteo por nivel respetando el orden deseado
+    counts = df_hse["NIVEL_CANON"].value_counts().reindex(niveles_order, fill_value=0)
     total = counts.sum()
 
     niveles = pd.DataFrame({"NIVEL_LOGRO_4": niveles_order, "conteo": counts.values})
@@ -404,7 +438,6 @@ def plot_niveles_hse(df_f, area_sel):
     )
 
     st.altair_chart(chart + text, use_container_width=True)
-
 
 # ---------------------------------------------------
 # Lógica de cada pestaña
@@ -565,6 +598,7 @@ with tab_cog:
 
 with tab_hse:
     show_tab_for_fuente(df, "HSE", GRADO_CATEGORIES, key_prefix="hse")
+
 
 
 
