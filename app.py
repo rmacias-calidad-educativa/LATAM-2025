@@ -111,14 +111,14 @@ def plot_medida_por_sexo(df_f, grado_categories):
     )
     resumen["Sexo"] = resumen["SEXO"].map({"F": "Femenino", "M": "Masculino"})
 
-    col_tab, col_chart = st.columns([1, 2])
+    st.write("**Media de MEDIDA_500 por grado y sexo (F = Femenino, M = Masculino)**")
 
-    with col_tab:
-        st.write("**Media de MEDIDA_500 por grado y sexo (F = Femenino, M = Masculino)**")
+    # Tabla en expander para liberar espacio horizontal
+    with st.expander("Ver tabla resumen por grado y sexo"):
         st.dataframe(resumen[["GRADO_LABEL", "Sexo", "MEDIDA_500_MEDIA"]])
 
-    # Base común para el gráfico
-    base = alt.Chart(resumen)
+    # Base común para el gráfico (más alto)
+    base = alt.Chart(resumen).properties(height=380)
 
     # Barras
     bar = base.mark_bar().encode(
@@ -139,20 +139,19 @@ def plot_medida_por_sexo(df_f, grado_categories):
         ],
     )
 
-    # Etiquetas de texto sobre las barras
+    # Etiquetas de texto sobre cada barra
     text = base.mark_text(dy=-10, color="white").encode(
         x=alt.X("GRADO_LABEL:N", sort=grado_categories),
         y="MEDIDA_500_MEDIA:Q",
         text=alt.Text("MEDIDA_500_MEDIA:Q", format=".1f"),
     )
 
-    # Layer (barras + texto) y luego facet por sexo (columnas separadas)
+    # Layer (barras + texto) y luego facet por sexo en columnas
     layered = alt.layer(bar, text).facet(
         column=alt.Column("Sexo:N", title="Sexo")
     )
 
-    with col_chart:
-        st.altair_chart(layered, use_container_width=True)
+    st.altair_chart(layered, use_container_width=True)
 
 # ---------------------------------------------------
 # Cognitivas: niveles (dona + proporciones por grado)
@@ -475,4 +474,5 @@ with tab_cog:
 
 with tab_hse:
     show_tab_for_fuente(df, "HSE", GRADO_CATEGORIES, key_prefix="hse")
+
 
