@@ -8,7 +8,7 @@ import unicodedata
 # Configuración de página y estilos (fondo negro, texto blanco)
 # ---------------------------------------------------
 st.set_page_config(
-    page_title="Resultados LATAM 2024-2025",
+    page_title="Resultados LATAM 2024",
     layout="wide"
 )
 
@@ -598,6 +598,7 @@ with tab_cog:
 
 with tab_hse:
     show_tab_for_fuente(df, "HSE", GRADO_CATEGORIES, key_prefix="hse")
+
 
 
 
