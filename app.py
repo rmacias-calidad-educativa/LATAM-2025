@@ -37,7 +37,7 @@ st.markdown(
     f"""
     <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
         <img src="data:image/png;base64,{LOGO_BASE64}" width="80">
-        <h1 style="margin-bottom:0;">Resultados LATAM 2024-2025</h1>
+        <h1 style="margin-bottom:0;">Resultados LATAM 2024</h1>
     </div>
     """,
     unsafe_allow_html=True
@@ -598,6 +598,7 @@ with tab_cog:
 
 with tab_hse:
     show_tab_for_fuente(df, "HSE", GRADO_CATEGORIES, key_prefix="hse")
+
 
 
 
